@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { fetchVenueData, calculateDistance } from '../utils/deliveryService';
 import { PriceBreakdown } from '../utils/types';
 import PriceDisplay from './PriceDisplay';
+import flatLay from '../images/high-angle-forklift-blue-background.jpg' // Import the image
 
 const DeliveryCalculator = () => {
   const [venueSlug, setVenueSlug] = useState('home-assignment-venue-helsinki');
@@ -13,7 +14,7 @@ const DeliveryCalculator = () => {
     deliveryFee: 190,
     deliveryDistance: 177,
     smallOrderSurcharge: 0,
-    totalPrice: 1190
+    totalPrice: 1190,
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,11 +38,11 @@ const DeliveryCalculator = () => {
   const calculateDeliveryPrice = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       const venueData = await fetchVenueData(venueSlug);
       const [venueLong, venueLat] = venueData.coordinates;
-      
+
       const distance = calculateDistance(
         parseFloat(latitude),
         parseFloat(longitude),
@@ -50,7 +51,7 @@ const DeliveryCalculator = () => {
       );
 
       const range = venueData.distanceRanges.find(
-        r => distance >= r.min && (r.max === 0 || distance < r.max)
+        (r) => distance >= r.min && (r.max === 0 || distance < r.max)
       );
 
       if (!range || range.max === 0) {
@@ -66,7 +67,7 @@ const DeliveryCalculator = () => {
         deliveryFee,
         deliveryDistance: distance,
         smallOrderSurcharge,
-        totalPrice: cartValueCents + deliveryFee + smallOrderSurcharge
+        totalPrice: cartValueCents + deliveryFee + smallOrderSurcharge,
       });
     } catch (err: any) {
       setError(err.message);
@@ -76,85 +77,67 @@ const DeliveryCalculator = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold mb-6">Delivery Order Price Calculator</h1>
-      
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Details</h2>
-          
-          <div className="space-y-2">
-            <label className="block">Venue slug</label>
-            <input
-              type="text"
-              value={venueSlug}
-              onChange={(e) => setVenueSlug(e.target.value)}
-              className="w-full border rounded p-2"
-              data-test-id="venueSlug"
-            />
+    <div
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat p-8"
+      style={{ backgroundImage: `url(${flatLay})` }} // Use the imported image
+    >
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+        {/* Calculator Section */}
+        <div className="bg-white/90 p-8 rounded-lg shadow-lg backdrop-blur-sm border-2 border-transparent hover:border-blue-400 transition-all duration-300">
+          <h1 className="text-3xl font-bold mb-8 text-blue-800">Delivery Calculator</h1>
+
+          <div className="space-y-6">
+            {[
+              { label: 'Venue slug', value: venueSlug, onChange: setVenueSlug, type: 'text', testId: 'venueSlug' },
+              { label: 'Cart value (EUR)', value: cartValue, onChange: setCartValue, type: 'number', step: '0.01', testId: 'cartValue' },
+              { label: 'User latitude', value: latitude, onChange: setLatitude, type: 'number', step: '0.00001', testId: 'userLatitude' },
+              { label: 'User longitude', value: longitude, onChange: setLongitude, type: 'number', step: '0.00001', testId: 'userLongitude' },
+            ].map(({ label, value, onChange, type, step, testId }) => (
+              <div key={label} className="space-y-2">
+                <label className="block text-gray-700 font-medium">{label}</label>
+                <input
+                  type={type}
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all"
+                  step={step}
+                  data-test-id={testId}
+                />
+              </div>
+            ))}
+
+            <div className="space-y-4">
+              <button
+                onClick={getLocation}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-lg transition-colors"
+                data-test-id="getLocation"
+              >
+                Get Current Location
+              </button>
+
+              <button
+                onClick={calculateDeliveryPrice}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? 'Calculating...' : 'Calculate Delivery Price'}
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block">Cart value (EUR)</label>
-            <input
-              type="number"
-              value={cartValue}
-              onChange={(e) => setCartValue(e.target.value)}
-              className="w-full border rounded p-2"
-              step="0.01"
-              data-test-id="cartValue"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block">User latitude</label>
-            <input
-              type="number"
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              className="w-full border rounded p-2"
-              step="0.00001"
-              data-test-id="userLatitude"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block">User longitude</label>
-            <input
-              type="number"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              className="w-full border rounded p-2"
-              step="0.00001"
-              data-test-id="userLongitude"
-            />
-          </div>
-
-          <button
-            onClick={getLocation}
-            className="bg-gray-200 px-4 py-2 rounded"
-            data-test-id="getLocation"
-          >
-            Get location
-          </button>
-
-          <button
-            onClick={calculateDeliveryPrice}
-            className="block w-full bg-blue-600 text-white px-4 py-2 rounded"
-            disabled={loading}
-          >
-            Calculate delivery price
-          </button>
+          {error && (
+            <div className="mt-6 text-red-600 p-4 bg-red-50 rounded-lg border border-red-200">
+              {error}
+            </div>
+          )}
         </div>
 
-        {error && (
-          <div className="text-red-600 p-4 bg-red-50 rounded">
-            {error}
-          </div>
-        )}
-
-        {!error && <PriceDisplay priceBreakdown={priceBreakdown} />}
+        {/* Price Display Section */}
+        <div className="h-fit sticky top-8">
+          {!error && <PriceDisplay priceBreakdown={priceBreakdown} />}
+        </div>
       </div>
+      
     </div>
   );
 };
