@@ -1,9 +1,24 @@
 import { VenueData } from './types';
+
 export const fetchVenueData = async (venueSlug: string): Promise<VenueData> => {
   try {
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors' as RequestMode,
+    };
+
     const [staticData, dynamicData] = await Promise.all([
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/venues/${venueSlug}/static`),
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/venues/${venueSlug}/dynamic`)
+      fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/venues/${venueSlug}/static`,
+        requestOptions
+      ),
+      fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/venues/${venueSlug}/dynamic`,
+        requestOptions
+      )
     ]);
 
     if (!staticData.ok || !dynamicData.ok) {
@@ -20,6 +35,7 @@ export const fetchVenueData = async (venueSlug: string): Promise<VenueData> => {
       distanceRanges: dynamicJson.venue_raw.delivery_specs.delivery_pricing.distance_ranges
     };
   } catch (error) {
+    console.error('Fetch error:', error);
     throw new Error('Error fetching venue data');
   }
 };
